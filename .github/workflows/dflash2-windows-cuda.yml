@@ -1,6 +1,8 @@
 name: DFlash2 Windows CUDA Build
 
 on:
+  push:
+    branches: [dflash2-win-build]
   workflow_dispatch:
 
 permissions:
