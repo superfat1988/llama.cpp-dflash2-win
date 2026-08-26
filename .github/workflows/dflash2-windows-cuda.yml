@@ -21,7 +21,7 @@ jobs:
         run: |
           $installer = Join-Path $env:RUNNER_TEMP 'cuda-network.exe'
           Invoke-WebRequest -Uri 'https://developer.download.nvidia.com/compute/cuda/12.4.1/network_installers/cuda_12.4.1_windows_network.exe' -OutFile $installer
-          Start-Process -FilePath $installer -ArgumentList '-s', 'nvcc_12.4', 'cudart_12.4' -Wait -NoNewWindow
+          Start-Process -FilePath $installer -ArgumentList '-s', 'cuda_toolkit_12.4' -Wait -NoNewWindow
           $cuda = Get-ChildItem 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA' -Directory | Sort-Object Name -Descending | Select-Object -First 1
           if (-not $cuda) { throw 'CUDA Toolkit installation not found' }
           "CUDA_PATH=$($cuda.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -29,7 +29,7 @@ jobs:
           & "$($cuda.FullName)\bin\nvcc.exe" --version
       - name: Configure CUDA build
         shell: pwsh
-        run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=86 -DCMAKE_BUILD_TYPE=Release
       - name: Build llama-server
         shell: pwsh
         run: cmake --build build --target llama-server -j 2
