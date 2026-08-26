@@ -32,16 +32,27 @@ jobs:
         run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=86 -DCMAKE_BUILD_TYPE=Release
       - name: Build llama-server
         shell: pwsh
-        run: cmake --build build --target llama-server -j 2
+        run: cmake --build build -j 2
       - name: Package runtime
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path package | Out-Null
           Copy-Item build/bin/* package/ -Force
+          $cudaDlls = @(
+            'cudart64_12.dll',
+            'cublas64_12.dll',
+            'cublasLt64_12.dll'
+          )
+          foreach ($dll in $cudaDlls) {
+            $source = Join-Path "$env:CUDA_PATH\bin" $dll
+            if (-not (Test-Path $source)) { throw "Required CUDA runtime DLL missing: $source" }
+            Copy-Item $source package/ -Force
+          }
           Get-ChildItem package | Select-Object Name,Length
+          "Package size: $([math]::Round(((Get-ChildItem package -File | Measure-Object Length -Sum).Sum / 1MB), 1)) MiB"
       - uses: actions/upload-artifact@v4
         with:
-          name: llama-server-windows-cuda-dflash2-pr27342
+          name: llama-windows-cuda-dflash2-pr27342-complete-runtime
           path: package/
           if-no-files-found: error
           retention-days: 7
