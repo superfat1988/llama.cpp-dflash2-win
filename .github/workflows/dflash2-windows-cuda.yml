@@ -13,9 +13,18 @@ jobs:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
+      - name: Install CUDA Toolkit
+        shell: pwsh
+        run: |
+          choco install cuda --version=12.4.1.61 -y --no-progress
+          $cuda = Get-ChildItem 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA' -Directory | Sort-Object Name -Descending | Select-Object -First 1
+          if (-not $cuda) { throw 'CUDA Toolkit installation not found' }
+          "CUDA_PATH=$($cuda.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "$($cuda.FullName)\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+          & "$($cuda.FullName)\bin\nvcc.exe" --version
       - name: Configure CUDA build
         shell: pwsh
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DGGML_CUDA=ON -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_BUILD_TYPE=Release
       - name: Build llama-server
         shell: pwsh
         run: cmake --build build --config Release --target llama-server -j 2
