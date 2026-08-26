@@ -29,7 +29,7 @@ jobs:
           & "$($cuda.FullName)\bin\nvcc.exe" --version
       - name: Configure CUDA build
         shell: pwsh
-        run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=86 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGGML_CUDA=ON -DCUDAToolkit_ROOT="$env:CUDA_PATH" -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" -DCMAKE_CUDA_ARCHITECTURES=86 -DGGML_NATIVE=OFF -DGGML_AVX=ON -DGGML_AVX2=ON -DGGML_FMA=ON -DGGML_F16C=ON -DGGML_AVX512=OFF -DCMAKE_BUILD_TYPE=Release
       - name: Build llama-server
         shell: pwsh
         run: cmake --build build --target llama-server llama-cli llama-bench llama-quantize llama-perplexity llama-imatrix llama-gguf-split llama-mtmd-cli -j 2
